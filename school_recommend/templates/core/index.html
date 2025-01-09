@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- 顶部Banner -->
+<div class="hero-section position-relative mb-5">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-5 fw-bold text-white mb-3">研究生院校推荐系统</h1>
+                <p class="lead text-white-75 mb-4 mx-auto" style="max-width: 600px;">
+                    智能匹配最适合你的院校，助力考研规划
+                </p>
+                <div class="search-box bg-white p-2 rounded-pill shadow-sm mx-auto" style="max-width: 600px;">
+                    <form class="d-flex" method="get" action="{% url 'search' %}">
+                        <input class="form-control form-control-lg border-0 rounded-pill me-2" 
+                               type="search" 
+                               placeholder="搜索学校、专业..." 
+                               name="q">
+                        <button class="btn btn-primary rounded-circle p-3" type="submit">
+                            搜索
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 学校类型统计 -->
+<div class="container mb-5">
+    <div class="row g-4">
+        {% for type, count in school_type_stats.items %}
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="display-6 fw-bold text-primary mb-2">{{ count }}</h3>
+                    <p class="text-muted mb-0">{{ type }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 985高校展示 -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">985高校</h2>
+    <div class="row g-4">
+        {% for school in top_985_schools %}
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ school.school_name }}</h5>
+                    <p class="card-text text-muted">{{ school.province_name }}</p>
+                    <a href="{% url 'school_detail' school.school_id %}" class="btn btn-outline-primary btn-sm">查看详情</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 热门院校 -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">热门院校</h2>
+    <div class="row g-4">
+        {% for school in hot_schools %}
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ school.school_name }}</h5>
+                    <p class="card-text text-muted">{{ school.province_name }}</p>
+                    <a href="{% url 'school_detail' school.school_id %}" class="btn btn-outline-primary btn-sm">查看详情</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 地区分布 -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">地区分布</h2>
+    <div class="row g-4">
+        {% for region, data in region_stats.items %}
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="h5 mb-3">{{ region }}</h3>
+                    <p class="text-muted small mb-2">{{ data.provinces }}</p>
+                    <h4 class="h2 text-primary mb-0">{{ data.count }}</h4>
+                    <small class="text-muted">所院校</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.hero-section {
+    background: linear-gradient(45deg, #1a73e8, #0d47a1);
+    color: white;
+    padding: 4rem 0;
+}
+.text-white-75 {
+    color: rgba(255, 255, 255, 0.75);
+}
+</style>
+{% endblock %}
+{% endblock %}

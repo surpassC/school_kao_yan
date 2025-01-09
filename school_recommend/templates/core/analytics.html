@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    {% if error %}
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">错误信息</h4>
+        <pre class="mb-0">{{ error }}</pre>
+    </div>
+    {% endif %}
+
+    {% if has_data %}
+    <!-- 学校统计信息 -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">院校总体统计</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for key, value in school_stats.items %}
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h3 class="display-4">{{ value }}</h3>
+                            <p class="card-text">{{ key }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 地理分布 -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">地理分布 (前10省份)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>省份</th>
+                            <th>院校数量</th>
+                            <th>985数量</th>
+                            <th>211数量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in province_distribution %}
+                        <tr>
+                            <td>{{ item.province }}</td>
+                            <td>{{ item.school_count }}</td>
+                            <td>{{ item.985_count }}</td>
+                            <td>{{ item.211_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 专业分布 -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">专业分布 (前10专业)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>专业名称</th>
+                            <th>开设院校数</th>
+                            <th>平均招生人数</th>
+                            <th>总招生人数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in major_distribution %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.school_count }}</td>
+                            <td>{{ item.avg_students|floatformat:1 }}</td>
+                            <td>{{ item.total_students }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分数线趋势 -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">分数线趋势</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>年份</th>
+                            <th>类型</th>
+                            <th>总分</th>
+                            <th>政治</th>
+                            <th>英语</th>
+                            <th>专业课一</th>
+                            <th>专业课二</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in score_trends %}
+                        <tr>
+                            <td>{{ row.year }}</td>
+                            <td>{{ row.degree_type }}</td>
+                            <td>{{ row.total|floatformat:1 }}</td>
+                            <td>{{ row.politics|floatformat:1 }}</td>
+                            <td>{{ row.english|floatformat:1 }}</td>
+                            <td>{{ row.special_one|floatformat:1 }}</td>
+                            <td>{{ row.special_two|floatformat:1 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 地域分布聚类分析 -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">地域分布聚类分析</h5>
+        </div>
+        <div class="card-body">
+            <div id="regionClusterMap"></div>
+        </div>
+    </div>
+
+    <!-- 专业相关性分析 -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">专业相关性热力图</h5>
+        </div>
+        <div class="card-body">
+            <div id="majorCorrelationHeatmap"></div>
+        </div>
+    </div>
+
+    <!-- 分数趋势预测 -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">分数趋势预测</h5>
+        </div>
+        <div class="card-body">
+            <div id="scorePredictionChart"></div>
+        </div>
+    </div>
+
+    <!-- 招生就业关系分析 -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">招生规模与就业率关系</h5>
+        </div>
+        <div class="card-body">
+            <div id="enrollmentEmploymentChart"></div>
+        </div>
+    </div>
+
+    <!-- 专业热度趋势 -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">专业热度变化趋势</h5>
+        </div>
+        <div class="card-body">
+            <div id="majorTrendChart" style="height: 600px;"></div>
+      
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.table-hover tbody tr:hover {
+    background-color: rgba(0,0,0,.075);
+}
+.display-4 {
+    font-size: 2.5rem;
+}
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+// 使用Plotly.js创建交互式图表
+document.addEventListener('DOMContentLoaded', function() {
+    // 地域分布聚类地图
+    const regionClusterData = {{ region_clusters|safe }};
+    const clusterColors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'];
+
+    const mapTrace = {
+        type: 'choropleth',
+        locationmode: 'CN-provinces',
+        locations: regionClusterData.map(d => d.province),
+        z: regionClusterData.map(d => d.cluster),
+        text: regionClusterData.map(d => 
+            `${d.province}<br>` +
+            `院校数量: ${d.school_id}<br>` +
+            `985数量: ${d.is_985}<br>` +
+            `211数量: ${d.is_211}<br>` +
+            `平均硕士点: ${d.num_master.toFixed(1)}<br>` +
+            `平均博士点: ${d.num_doctor.toFixed(1)}`
+        ),
+        hoverinfo: 'text',
+        colorscale: clusterColors.map((color, i) => [i/3, color]),
+        showscale: true,
+        colorbar: {
+            title: '聚类组别',
+            ticktext: ['第一组', '第二组', '第三组', '第四组'],
+            tickvals: [0, 1, 2, 3],
+            tickmode: 'array'
+        }
+    };
+
+    const mapLayout = {
+        title: '高校地域分布聚类分析',
+        geo: {
+            scope: 'china',
+            showlakes: true,
+            lakecolor: 'rgb(255, 255, 255)',
+            showland: true,
+            landcolor: 'rgb(242, 242, 242)',
+            showframe: false,
+            projection: {
+                type: 'mercator'
+            }
+        },
+        height: 600,
+        margin: {
+            l: 0,
+            r: 0,
+            t: 30,
+            b: 0
+        }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+
+    Plotly.newPlot('regionClusterMap', [mapTrace], mapLayout, config);
+
+    // 专业相关性热力图
+     // 专业热度趋势图
+    const majorTrendData = {{ major_trends|safe }};
+    const trendTrace = {
+        type: 'scatter',
+        mode: 'markers',
+        x: majorTrendData.map(d => d.growth_rate),
+        y: majorTrendData.map(d => d.current_students),
+        text: majorTrendData.map(d => 
+            `${d.major_name}<br>` +
+            `增长率: ${d.growth_rate}%<br>` +
+            `当前招生: ${d.current_students}人<br>` +
+            `开设院校: ${d.current_schools}所<br>` +
+            `院校变化: ${d.school_change > 0 ? '+' : ''}${d.school_change}所`
+        ),
+        hoverinfo: 'text',
+        marker: {
+            size: majorTrendData.map(d => Math.sqrt(d.current_schools) * 5),
+            color: majorTrendData.map(d => 
+                d.trend_type === 'up' ? '#2ecc71' : 
+                d.trend_type === 'down' ? '#e74c3c' : '#3498db'
+            ),
+            opacity: 0.7,
+            line: {
+                color: '#fff',
+                width: 1
+            }
+        }
+    };
+
+    const trendLayout = {
+        title: '专业发展趋势分析',
+        xaxis: { 
+            title: '增长率 (%)',
+            zeroline: true,
+            zerolinecolor: '#666',
+            gridcolor: '#eee'
+        },
+        yaxis: { 
+            title: '当前招生人数',
+            gridcolor: '#eee'
+        },
+        hovermode: 'closest',
+        plot_bgcolor: '#fff',
+        paper_bgcolor: '#fff',
+        showlegend: false
+    };
+
+    Plotly.newPlot('majorTrendChart', [trendTrace], trendLayout);
+
+    // 分数趋势预测图
+    const scorePredictionData = {{ score_predictions|safe }};
+    const degreeTypes = [...new Set(scorePredictionData.historical.map(d => d.degree_type_name))];
+
+    const traces = degreeTypes.map(degree => ({
+        name: degree,
+        type: 'scatter',
+        mode: 'lines+markers',
+        x: scorePredictionData.historical
+            .filter(d => d.degree_type_name === degree)
+            .map(d => d.year),
+        y: scorePredictionData.historical
+            .filter(d => d.degree_type_name === degree)
+            .map(d => d.total.mean),
+        error_y: {
+            type: 'data',
+            array: scorePredictionData.historical
+                .filter(d => d.degree_type_name === degree)
+                .map(d => d.total.std),
+            visible: true
+        }
+    }));
+
+    // 添加预测数据
+    degreeTypes.forEach(degree => {
+        const predictions = scorePredictionData.predictions.filter(d => d.degree_type === degree);
+        traces.push({
+            name: `${degree} (预测)`,
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: { dash: 'dot' },
+            x: predictions.map(d => d.year),
+            y: predictions.map(d => d.predicted_score)
+        });
+    });
+
+    const scoreLayout = {
+        title: '考研分数趋势预测',
+        xaxis: { title: '年份' },
+        yaxis: { title: '平均分' },
+        showlegend: true
+    };
+
+    Plotly.newPlot('scorePredictionChart', traces, scoreLayout);
+
+    // 招生就业关系散点图
+    const enrollmentEmploymentData = {{ enrollment_employment|safe }};
+    const scatterTrace = {
+        type: 'scatter',
+        mode: 'markers',
+        x: enrollmentEmploymentData.map(d => d.enrollment),
+        y: enrollmentEmploymentData.map(d => d.employment_rate),
+        text: enrollmentEmploymentData.map(d => 
+            `${d.school_name}<br>` +
+            `${d.province}<br>` +
+            `招生人数: ${d.enrollment}人<br>` +
+            `就业率: ${d.employment_rate}%` +
+            `${d.is_985 ? '<br>985院校' : ''}` +
+            `${d.is_211 ? '<br>211院校' : ''}`
+        ),
+        hoverinfo: 'text',
+        marker: {
+            size: 10,
+            color: enrollmentEmploymentData.map(d => 
+                d.is_985 ? '#e74c3c' : 
+                d.is_211 ? '#3498db' : 
+                '#95a5a6'
+            ),
+            opacity: 0.7,
+            line: {
+                color: '#fff',
+                width: 1
+            }
+        }
+    };
+
+    const scatterLayout = {
+        title: '招生规模与就业率关系分析',
+        xaxis: { 
+            title: '招生人数',
+            zeroline: true,
+            zerolinecolor: '#666',
+            gridcolor: '#eee'
+        },
+        yaxis: { 
+            title: '就业率 (%)',
+            gridcolor: '#eee'
+        },
+        hovermode: 'closest',
+        plot_bgcolor: '#fff',
+        paper_bgcolor: '#fff',
+        showlegend: false
+    };
+
+    Plotly.newPlot('enrollmentEmploymentChart', [scatterTrace], scatterLayout);
+
+    // 专业相关性热力图
+    const correlationData = {{ major_correlation|safe }};
+
+    if (correlationData.majors && correlationData.majors.length > 0) {
+        const heatmapTrace = {
+            type: 'heatmap',
+            x: correlationData.majors,
+            y: correlationData.majors,
+            z: correlationData.data,
+            colorscale: [
+                [0, '#f7fbff'],
+                [0.3, '#deebf7'],
+                [0.6, '#9ecae1'],
+                [0.8, '#3182bd'],
+                [1, '#08519c']
+            ],
+            hoverongaps: false,
+            hovertemplate: 
+                '专业1: %{y}<br>' +
+                '专业2: %{x}<br>' +
+                '相关性: %{z:.2f}<br>' +
+                '<extra></extra>'
+        };
+
+        const heatmapLayout = {
+            title: '专业相关性分析',
+            xaxis: {
+                title: '专业名称',
+                tickangle: 45
+            },
+            yaxis: {
+                title: '专业名称'
+            },
+            height: 800,
+            margin: {
+                l: 150,
+                r: 50,
+                b: 150,
+                t: 50,
+                pad: 4
+            }
+        };
+
+        Plotly.newPlot('majorCorrelationHeatmap', [heatmapTrace], heatmapLayout, {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false
+        });
+    }
+});
+</script>
+{% endblock %} 

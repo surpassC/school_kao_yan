@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}推荐结果 - 研究生院校推荐系统{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">您的分数情况</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <strong>总分：</strong>{{ user_scores.total }}
+                        </div>
+                        <div class="col-md-2">
+                            <strong>政治：</strong>{{ user_scores.politics }}
+                        </div>
+                        <div class="col-md-2">
+                            <strong>英语：</strong>{{ user_scores.english }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>专业课一：</strong>{{ user_scores.special_one }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>专业课二：</strong>{{ user_scores.special_two }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">推荐院校</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>院校名称</th>
+                                    <th>专业名称</th>
+                                    <th>分数线</th>
+                                    <th>分差</th>
+                                    <th>匹配度</th>
+                                    <th>录取率</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in recommendations %}
+                                <tr>
+                                    <td>{{ rec.school.school_name }}</td>
+                                    <td>{{ rec.score.special_name }}</td>
+                                    <td>{{ rec.score.total }}</td>
+                                    <td class="{% if rec.diff_total >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ rec.diff_total }}
+                                    </td>
+                                    <td>{{ rec.similarity|floatformat:2 }}</td>
+                                    <td>{{ rec.school.syl }}%</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">详情</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">暂无匹配的院校推荐</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

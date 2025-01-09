@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form class="d-flex" method="get" action="{% url 'search' %}">
+                        <input class="form-control me-2" type="search" placeholder="搜索学校、专业..." name="q" value="{{ query }}">
+                        <button class="btn btn-outline-primary" type="submit">搜索</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mb-3">搜索结果: {{ schools|length }} 个</h5>
+            <div class="row g-3">
+                {% for school in schools %}
+                <div class="col-md-3">
+                    <a href="{% url 'school_detail' school.school_id %}" class="text-decoration-none">
+                        <div class="card h-100 border-0 bg-light hover-shadow">
+                            <div class="card-body d-flex align-items-center">
+                                <img src="https://static.kaoyan.cn/image/logo/{{ school.school_id }}_log.jpg"
+                                     alt="{{ school.school_name }}" 
+                                     class="rounded-circle me-3"
+                                     style="width: 50px; height: 50px; object-fit: cover;"
+                                     onerror="this.src='{% static 'images/default_school_logo.jpg' %}'">
+                                <div>
+                                    <h6 class="card-title mb-1 text-dark">{{ school.school_name }}</h6>
+                                    <p class="card-text mb-0">
+                                        <small class="text-muted">
+                                            {{ school.province }}
+                                            {% if school.is_985 == 1 %}<span class="badge bg-primary">985</span>{% endif %}
+                                            {% if school.is_211 == 1 %}<span class="badge bg-success">211</span>{% endif %}
+                                            <br>硕士人数: {{ school.num_master }}
+                                        </small>
+                                    </p>
+                                </div>
+                                <i class="fas fa-chevron-right ms-auto text-muted"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        没有找到匹配的院校，请尝试其他关键词
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+    transition: box-shadow .3s ease-in-out;
+}
+</style>
+{% endblock %} 
