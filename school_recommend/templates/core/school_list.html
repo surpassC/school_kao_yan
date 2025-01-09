@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<div class="container">
+<div class="container py-4">
     <!-- 筛选器 -->
     <div class="card mb-4">
         <div class="card-body">
@@ -37,9 +37,11 @@
                     <select name="category" class="form-select">
                         <option value="">全部类别</option>
                         {% for cat in categories %}
+                        {% if cat %}
                         <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>
                             {{ cat }}
                         </option>
+                        {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -65,24 +67,35 @@
 
     <!-- 学校列表 -->
     <div class="row g-4">
-        {% for school in schools %}
+        {% for school in page_obj.object_list %}
         <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm">
+            <div class="card h-100 border-0 shadow-sm school-card">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        {{ school.school_name }}
-                        {% if school.is_985 %}
-                        <span class="badge bg-primary">985</span>
-                        {% endif %}
-                        {% if school.is_211 %}
-                        <span class="badge bg-success">211</span>
-                        {% endif %}
-                        {% if school.is_zihuaxian %}
-                        <span class="badge bg-info">自划线</span>
-                        {% endif %}
-                    </h5>
-                    <p class="card-text text-muted mb-2">{{ school.province_name }}</p>
-                    <div class="row small text-muted">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="school-logo-wrapper me-3">
+                            {% if school.school_id %}
+                            <img src="https://static.kaoyan.cn/image/logo/{{ school.school_id }}_log.jpg" class="school-logo" alt="{{ school.school_name }}">
+                            {% else %}
+                            <img src="{% static 'images/default_school_logo.png' %}" class="school-logo" alt="默认学校logo">
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-1">{{ school.school_name }}</h5>
+                            <div class="badge-group">
+                                {% if school.is_985 %}
+                                <span class="badge bg-primary">985</span>
+                                {% endif %}
+                                {% if school.is_211 %}
+                                <span class="badge bg-success">211</span>
+                                {% endif %}
+                                {% if school.is_zihuaxian %}
+                                <span class="badge bg-info">自划线</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-2">{{ school.province }}</p>
+                    <div class="row small text-muted mb-3">
                         <div class="col-6">
                             <small class="d-block">硕士点：{{ school.num_master|default:"--" }}</small>
                             <small class="d-block">博士点：{{ school.num_doctor|default:"--" }}</small>
@@ -92,7 +105,7 @@
                             <small class="d-block">重点实验室：{{ school.num_lab|default:"--" }}</small>
                         </div>
                     </div>
-                    <div class="mt-3">
+                    <div class="mt-auto">
                         <a href="{% url 'school_detail' school.school_id %}" class="btn btn-sm btn-primary">查看详情</a>
                         <a href="{% url 'school_detail' school.school_id %}#scores" class="btn btn-sm btn-outline-success">分数线</a>
                     </div>
@@ -108,30 +121,71 @@
         {% endfor %}
     </div>
 
-    <!-- 分页 -->
-    {% if schools.has_other_pages %}
-    <nav class="mt-4">
+    <!-- 分页导航 -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4" aria-label="学校列表分页">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted">
+                共 {{ page_obj.paginator.count }} 所学校，{{ page_obj.paginator.num_pages }} 页
+            </small>
+            <small class="text-muted">
+                当前第 {{ page_obj.number }} 页
+            </small>
+        </div>
         <ul class="pagination justify-content-center">
-            {% if schools.has_previous %}
+            <!-- 首页 -->
+            {% if page_obj.number > 1 %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ schools.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
-                    上一页
+                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    首页
                 </a>
             </li>
             {% endif %}
 
-            {% for i in schools.paginator.page_range %}
-            <li class="page-item {% if schools.number == i %}active{% endif %}">
-                <a class="page-link" href="?page={{ i }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
-                    {{ i }}
+            <!-- 上一页 -->
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
+            {% endif %}
+
+            <!-- 页码 -->
+            {% for i in page_obj.paginator.page_range %}
+                {% if i == page_obj.number %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }}</span>
+                    </li>
+                {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                    </li>
+                {% elif i == 1 or i == page_obj.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                    </li>
+                {% elif i == page_obj.number|add:'-3' or i == page_obj.number|add:'3' %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
             {% endfor %}
 
-            {% if schools.has_next %}
+            <!-- 下一页 -->
+            {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ schools.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
-                    下一页
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- 末页 -->
+            {% if page_obj.number < page_obj.paginator.num_pages %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    末页
                 </a>
             </li>
             {% endif %}
@@ -142,12 +196,35 @@
 
 {% block extra_css %}
 <style>
-.card {
-    transition: transform 0.2s;
+.school-card {
+    transition: transform 0.3s ease;
 }
-.card:hover {
+
+.school-card:hover {
     transform: translateY(-5px);
 }
+
+.school-logo-wrapper {
+    width: 60px;
+    height: 60px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.school-logo {
+    max-width: 50px;
+    max-height: 50px;
+    object-fit: contain;
+}
+
+.badge-group .badge {
+    margin-right: 0.25rem;
+}
+
 </style>
 {% endblock %}
 {% endblock %} 

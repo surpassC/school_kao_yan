@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- 结果摘要 -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-3">推荐结果</h4>
+                    <p class="text-muted">
+                        根据您的条件，我们为您筛选出 {{ total_count }} 所符合条件的院校
+                        <br>
+                        <small>总分：{{ total_score }}</small>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 推荐学校列表 -->
+            <div class="row g-4">
+                {% for school in page_obj %}
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://static.kaoyan.cn/image/logo/{{ school.school_id }}_log.jpg"
+                                     alt="{{ school.school_name }}"
+                                     class="rounded-circle me-3"
+                                     style="width: 60px; height: 60px; object-fit: cover;"
+                                     onerror="this.src='{% static 'images/default_school_logo.jpg' %}'">
+                                <div>
+                                    <h5 class="card-title mb-1">{{ school.school_name }}</h5>
+                                    <p class="text-muted mb-0">{{ school.province }}</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                {% if school.is_985 == 1 %}<span class="badge bg-primary me-1">985</span>{% endif %}
+                                {% if school.is_211 == 1 %}<span class="badge bg-success me-1">211</span>{% endif %}
+                                {% if school.is_zihuaxian == 1 %}<span class="badge bg-info me-1">自划线</span>{% endif %}
+                            </div>
+
+                            <div class="row g-2 text-center mb-3">
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded">
+                                        <small class="d-block text-muted">硕士人数</small>
+                                        <strong>{{ school.num_master|default:"--" }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded">
+                                        <small class="d-block text-muted">博士人数</small>
+                                        <strong>{{ school.num_doctor|default:"--" }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-2 bg-light rounded">
+                                        <small class="d-block text-muted">学科数量</small>
+                                        <strong>{{ school.num_subject|default:"--" }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="card-text small text-muted mb-3">
+                                {{ school.intro|truncatechars:100 }}
+                            </p>
+
+                            <a href="{% url 'school_detail' school.school_id %}" class="btn btn-outline-primary btn-sm">
+                                查看详情
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        抱歉，没有找到符合条件的院校。请尝试调整筛选条件。
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- 分页导航 -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-4" aria-label="推荐结果分页">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="text-muted">
+                        共 {{ total_count }} 所学校，{{ page_obj.paginator.num_pages }} 页
+                    </small>
+                    <small class="text-muted">
+                        当前第 {{ page_obj.number }} 页
+                    </small>
+                </div>
+                <ul class="pagination justify-content-center">
+                    <!-- 首页 -->
+                    {% if page_obj.number > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">首页</a>
+                    </li>
+                    {% endif %}
+
+                    <!-- 上一页 -->
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- 页码 -->
+                    {% for i in page_obj.paginator.page_range %}
+                        {% if i == page_obj.number %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ i }}</span>
+                            </li>
+                        {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% elif i == 1 or i == page_obj.paginator.num_pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% elif i == page_obj.number|add:'-3' or i == page_obj.number|add:'3' %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- 下一页 -->
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- 末页 -->
+                    {% if page_obj.number < page_obj.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">末页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            <!-- 返回按钮 -->
+            <div class="text-center mt-4">
+                <a href="{% url 'recommend' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>重新筛选
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -26,4 +26,5 @@ urlpatterns = [
     path('school/<str:school_id>/', views.school_detail, name='school_detail'),
     path('analytics/', views.DataAnalyticsView.as_view(), name='analytics'),
     path('core/', include('core.urls')),
+    path('recommend/', views.recommend, name='recommend'),
 ]

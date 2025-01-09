@@ -67,25 +67,35 @@ def index(request):
 
 def search(request):
     query = request.GET.get('q', '')
-    schools = []
-    
     if query:
         schools = SchoolDetails.objects.filter(
             Q(school_name__icontains=query) |
-            Q(province__icontains=query)
-        ).order_by('rk_rank')
+            Q(province__icontains=query) |
+            Q(intro__icontains=query)
+        ).order_by('-top_value')
+    else:
+        schools = SchoolDetails.objects.none()
+    
+    # 分页处理
+    paginator = Paginator(schools, 40)  # 每页显示12所学校
+    page = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
 
     context = {
+        'page_obj': page_obj,
         'query': query,
-        'schools': schools,
     }
-    
     return render(request, 'core/search.html', context) 
 
 def school_list(request):
     # 获取筛选参数
     region = request.GET.get('region', '')
-    school_type = request.GET.get('type', '')
+    type = request.GET.get('type', '')
     category = request.GET.get('category', '')
     level = request.GET.get('level', '')
     
@@ -96,50 +106,45 @@ def school_list(request):
     if region:
         schools = schools.filter(province=region)
     
-    if school_type:
-        if school_type == '985':
+    if type:
+        if type == '985':
             schools = schools.filter(is_985=1)
-        elif school_type == '211':
+        elif type == '211':
             schools = schools.filter(is_211=1)
-        elif school_type == 'zihuaxian':
+        elif type == 'zihuaxian':
             schools = schools.filter(is_zihuaxian=1)
     
     if category:
         schools = schools.filter(feature__icontains=category)
         
     if level:
-        if level == 'shuoshi':
+        if level == '硕士':
             schools = schools.filter(num_master__gt=0)
-        elif level == 'boshi':
+        elif level == '博士':
             schools = schools.filter(num_doctor__gt=0)
     
-    # 获取筛选选项
-    provinces = SchoolDetails.objects.values_list('province', flat=True).distinct()
+    # 分页处理
+    paginator = Paginator(schools, 12)  # 每页显示12所学校
+    page = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
     
-    # 预定义的院校类别
-    categories = [
-        ('综合类', '综合类院校'),
-        ('理工类', '理工类院校'),
-        ('农林类', '农林类院校'),
-        ('医药类', '医药类院校'),
-        ('师范类', '师范类院校'),
-        ('语言类', '语言类院校'),
-        ('财经类', '财经类院校'),
-        ('政法类', '政法类院校'),
-        ('体育类', '体育类院校'),
-        ('艺术类', '艺术类院校'),
-        ('民族类', '民族类院校'),
-        ('军事类', '军事类院校'),
-    ]
+    # 获取筛选选项
+    provinces = SchoolDetails.objects.values_list('province', flat=True).distinct().order_by('province')
+    categories = SchoolDetails.objects.values_list('feature', flat=True).distinct().order_by('feature')
     
     context = {
-        'schools': schools,
+        'page_obj': page_obj,
         'provinces': provinces,
         'categories': categories,
-        'selected_region': region,
-        'selected_type': school_type,
-        'selected_category': category,
-        'selected_level': level,
+        'region': region,
+        'type': type,
+        'category': category,
+        'level': level,
     }
     
     return render(request, 'core/school_list.html', context) 
@@ -440,3 +445,158 @@ class DataAnalyticsView(TemplateView):
             context['has_data'] = False
         
         return context
+
+    def analyze_region_clusters(self):
+        # 获取所有省份的学校统计数据
+        provinces = SchoolDetails.objects.values('province').annotate(
+            school_count=Count('school_id'),
+            num_985=Count('school_id', filter=Q(is_985=1)),
+            num_211=Count('school_id', filter=Q(is_211=1)),
+            avg_master=Avg('num_master'),
+            avg_doctor=Avg('num_doctor')
+        ).filter(
+            province__isnull=False,
+            province__in=[
+                '北京', '天津', '河北', '山西', '内蒙古', 
+                '辽宁', '吉林', '黑龙江', '上海', '江苏', 
+                '浙江', '安徽', '福建', '江西', '山东', 
+                '河南', '湖北', '湖南', '广东', '广西', 
+                '海南', '重庆', '四川', '贵州', '云南', 
+                '西藏', '陕西', '甘肃', '青海', '宁夏', '新疆'
+            ]
+        )
+
+        # 计算聚类指标
+        region_clusters = []
+        for p in provinces:
+            # 计算综合得分
+            score = (
+                p['school_count'] * 0.3 +
+                p['num_985'] * 0.3 +
+                p['num_211'] * 0.2 +
+                (p['avg_master'] or 0) * 0.1 +
+                (p['avg_doctor'] or 0) * 0.1
+            )
+            
+            # 根据得分确定聚类
+            if score > 20:
+                cluster = 4  # 极丰富
+            elif score > 15:
+                cluster = 3  # 丰富
+            elif score > 10:
+                cluster = 2  # 较多
+            elif score > 5:
+                cluster = 1  # 中等
+            else:
+                cluster = 0  # 较少
+
+            region_clusters.append({
+                'province': p['province'],
+                'cluster': cluster,
+                'school_count': p['school_count'],
+                'num_985': p['num_985'],
+                'num_211': p['num_211'],
+                'avg_master': round(p['avg_master'] or 0, 1),
+                'avg_doctor': round(p['avg_doctor'] or 0, 1)
+            })
+
+        return region_clusters
+
+def recommend(request):
+    if request.method == 'POST':
+        # 获取表单数据
+        undergraduate_major = request.POST.get('undergraduate_major')
+        target_major = request.POST.get('target_major')
+        political_score = int(request.POST.get('political_score', 0))
+        english_score = int(request.POST.get('english_score', 0))
+        specialized_score1 = int(request.POST.get('specialized_score1', 0))
+        specialized_score2 = int(request.POST.get('specialized_score2', 0))
+        preferred_regions = request.POST.getlist('preferred_region')
+        school_types = request.POST.getlist('school_type')
+        
+        # 计算总分
+        total_score = political_score + english_score + specialized_score1 + (specialized_score2 if specialized_score2 else 0)
+        
+        # 构建推荐查询
+        schools = SchoolDetails.objects.all()
+        
+        # 应用筛选条件
+        if preferred_regions:
+            schools = schools.filter(province__in=preferred_regions)
+        
+        if '985' in school_types:
+            schools = schools.filter(is_985=1)
+        if '211' in school_types:
+            schools = schools.filter(is_211=1)
+        
+        # 根据专业和分数进行匹配
+        schools = schools.order_by('-top_value')
+        
+        # 分页处理
+        paginator = Paginator(schools, 10)  # 每页显示10所学校
+        page = request.GET.get('page')
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+        
+        # 保存筛选条件到session，用于分页时保持条件
+        request.session['recommend_filters'] = {
+            'undergraduate_major': undergraduate_major,
+            'target_major': target_major,
+            'political_score': political_score,
+            'english_score': english_score,
+            'specialized_score1': specialized_score1,
+            'specialized_score2': specialized_score2,
+            'preferred_regions': preferred_regions,
+            'school_types': school_types,
+            'total_score': total_score,
+        }
+        
+        context = {
+            'page_obj': page_obj,
+            'total_score': total_score,
+            'total_count': schools.count(),
+        }
+        return render(request, 'core/recommend_results.html', context)
+    
+    # 如果是GET请求但有分页参数，说明是在查看分页结果
+    elif request.GET.get('page') and 'recommend_filters' in request.session:
+        filters = request.session['recommend_filters']
+        schools = SchoolDetails.objects.all()
+        
+        # 重新应用筛选条件
+        if filters.get('preferred_regions'):
+            schools = schools.filter(province__in=filters['preferred_regions'])
+        if '985' in filters.get('school_types', []):
+            schools = schools.filter(is_985=1)
+        if '211' in filters.get('school_types', []):
+            schools = schools.filter(is_211=1)
+            
+        schools = schools.order_by('-top_value')
+        
+        # 分页处理
+        paginator = Paginator(schools, 10)
+        page = request.GET.get('page')
+        try:
+            page_obj = paginator.page(page)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+            
+        context = {
+            'page_obj': page_obj,
+            'total_score': filters['total_score'],
+            'total_count': schools.count(),
+        }
+        return render(request, 'core/recommend_results.html', context)
+    
+    # GET 请求显示表单
+    context = {
+        'provinces': SchoolDetails.objects.values_list('province', flat=True).distinct().order_by('province'),
+        'majors': SchoolDetails.objects.values_list('feature', flat=True).distinct().order_by('feature'),
+    }
+    return render(request, 'core/recommend.html', context)

@@ -7,23 +7,42 @@
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-8 text-center">
-                <h1 class="display-5 fw-bold text-white mb-3">研究生院校推荐系统</h1>
+                <h1 class="display-4 fw-bold text-white mb-4">研究生院校推荐系统</h1>
                 <p class="lead text-white-75 mb-4 mx-auto" style="max-width: 600px;">
                     智能匹配最适合你的院校，助力考研规划
                 </p>
-                <div class="search-box bg-white p-2 rounded-pill shadow-sm mx-auto" style="max-width: 600px;">
+                <div class="search-box bg-white p-3 rounded-pill shadow-lg mx-auto mb-4" style="max-width: 600px;">
                     <form class="d-flex" method="get" action="{% url 'search' %}">
                         <input class="form-control form-control-lg border-0 rounded-pill me-2" 
                                type="search" 
                                placeholder="搜索学校、专业..." 
                                name="q">
                         <button class="btn btn-primary rounded-circle p-3" type="submit">
-                            搜索
+                            <i class="fas fa-search"></i>
                         </button>
                     </form>
                 </div>
+                <div class="recommendation-box">
+                    <a href="{% url 'recommend' %}" class="btn btn-light btn-lg rounded-pill px-5 py-3 shadow-lg">
+                        <i class="fas fa-magic me-2"></i>
+                        智能推荐院校
+                        <small class="d-block text-muted mt-1">根据你的条件匹配最适合的院校</small>
+                    </a>
+                </div>
             </div>
         </div>
+    </div>
+    <div class="hero-waves">
+        <svg class="waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
+            <defs>
+                <path id="wave-path" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+            </defs>
+            <g class="wave-group">
+                <use href="#wave-path" x="50" y="3" fill="rgba(255,255,255,0.1)"></use>
+                <use href="#wave-path" x="50" y="5" fill="rgba(255,255,255,0.2)"></use>
+                <use href="#wave-path" x="50" y="7" fill="rgba(255,255,255,0.3)"></use>
+            </g>
+        </svg>
     </div>
 </div>
 
@@ -32,9 +51,18 @@
     <div class="row g-4">
         {% for type, count in school_type_stats.items %}
         <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h3 class="display-6 fw-bold text-primary mb-2">{{ count }}</h3>
+            <div class="stat-card card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="stat-icon mb-3">
+                        {% if type == '985院校' %}
+                        <i class="fas fa-star text-primary"></i>
+                        {% elif type == '211院校' %}
+                        <i class="fas fa-award text-success"></i>
+                        {% else %}
+                        <i class="fas fa-university text-info"></i>
+                        {% endif %}
+                    </div>
+                    <h3 class="display-5 fw-bold text-primary mb-2">{{ count }}</h3>
                     <p class="text-muted mb-0">{{ type }}</p>
                 </div>
             </div>
@@ -45,15 +73,25 @@
 
 <!-- 985高校展示 -->
 <div class="container mb-5">
-    <h2 class="text-center mb-4">985高校</h2>
+    <div class="section-header text-center mb-5">
+        <h2 class="display-6 fw-bold">985高校</h2>
+        <div class="section-divider"></div>
+    </div>
     <div class="row g-4">
         {% for school in top_985_schools %}
         <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ school.school_name }}</h5>
-                    <p class="card-text text-muted">{{ school.province_name }}</p>
-                    <a href="{% url 'school_detail' school.school_id %}" class="btn btn-outline-primary btn-sm">查看详情</a>
+            <div class="school-card card h-100 border-0 shadow-sm">
+                <div class="school-logo-wrapper">
+                    {% if school.school_id %}
+                    <img src="https://static.kaoyan.cn/image/logo/{{ school.school_id }}_log.jpg" class="school-logo" alt="{{ school.school_name }}">
+                    {% else %}
+                    <img src="{% static 'images/default_school_logo.png' %}" class="school-logo" alt="默认学校logo">
+                    {% endif %}
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-2">{{ school.school_name }}</h5>
+                    <p class="card-text text-muted mb-3">{{ school.province_name }}</p>
+                    <a href="{% url 'school_detail' school.school_id %}" class="btn btn-outline-primary btn-sm stretched-link">查看详情</a>
                 </div>
             </div>
         </div>
@@ -63,34 +101,25 @@
 
 <!-- 热门院校 -->
 <div class="container mb-5">
-    <h2 class="text-center mb-4">热门院校</h2>
+    <div class="section-header text-center mb-5">
+        <h2 class="display-6 fw-bold">热门院校</h2>
+        <div class="section-divider"></div>
+    </div>
     <div class="row g-4">
         {% for school in hot_schools %}
         <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ school.school_name }}</h5>
-                    <p class="card-text text-muted">{{ school.province_name }}</p>
-                    <a href="{% url 'school_detail' school.school_id %}" class="btn btn-outline-primary btn-sm">查看详情</a>
+            <div class="school-card card h-100 border-0 shadow-sm">
+                <div class="school-logo-wrapper">
+                    {% if school.school_id %}
+                    <img src="https://static.kaoyan.cn/image/logo/{{ school.school_id }}_log.jpg" class="school-logo" alt="{{ school.school_name }}">
+                    {% else %}
+                    <img src="{% static 'images/default_school_logo.png' %}" class="school-logo" alt="默认学校logo">
+                    {% endif %}
                 </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-
-<!-- 地区分布 -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">地区分布</h2>
-    <div class="row g-4">
-        {% for region, data in region_stats.items %}
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body text-center">
-                    <h3 class="h5 mb-3">{{ region }}</h3>
-                    <p class="text-muted small mb-2">{{ data.provinces }}</p>
-                    <h4 class="h2 text-primary mb-0">{{ data.count }}</h4>
-                    <small class="text-muted">所院校</small>
+                    <h5 class="card-title mb-2">{{ school.school_name }}</h5>
+                    <p class="card-text text-muted mb-3">{{ school.province_name }}</p>
+                    <a href="{% url 'school_detail' school.school_id %}" class="btn btn-outline-primary btn-sm stretched-link">查看详情</a>
                 </div>
             </div>
         </div>
@@ -98,16 +127,165 @@
     </div>
 </div>
 
-{% block extra_css %}
 <style>
+/* Hero section styles */
 .hero-section {
-    background: linear-gradient(45deg, #1a73e8, #0d47a1);
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
     color: white;
-    padding: 4rem 0;
+    padding: 6rem 0 8rem;
+    overflow: hidden;
 }
+
 .text-white-75 {
     color: rgba(255, 255, 255, 0.75);
 }
+
+.hero-waves {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+.waves {
+    width: 100%;
+    height: 100px;
+}
+
+/* Section styles */
+.section-header {
+    position: relative;
+}
+
+.section-divider {
+    width: 60px;
+    height: 3px;
+    background: #1a73e8;
+    margin: 1rem auto;
+    border-radius: 2px;
+}
+
+/* Card styles */
+.stat-card {
+    transition: transform 0.3s ease;
+    border-radius: 15px;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    height: 80px;
+    width: 80px;
+    line-height: 80px;
+    border-radius: 50%;
+    background: rgba(26, 115, 232, 0.1);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* School card styles */
+.school-card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.school-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.school-logo-wrapper {
+    height: 150px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    padding: 1rem;
+}
+
+.school-logo {
+    max-width: 120px;
+    max-height: 120px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.school-card:hover .school-logo {
+    transform: scale(1.1);
+}
+
+/* Search box styles */
+.search-box {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.search-box .form-control:focus {
+    box-shadow: none;
+}
+
+.search-box .btn-primary {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 4rem 0 6rem;
+    }
+    
+    .waves {
+        height: 60px;
+    }
+    
+    .school-logo-wrapper {
+        height: 120px;
+    }
+    
+    .school-logo {
+        max-width: 100px;
+        max-height: 100px;
+    }
+}
+
+.recommendation-box {
+    animation: float 3s ease-in-out infinite;
+}
+
+.recommendation-box .btn {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.recommendation-box .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
 </style>
-{% endblock %}
+
+<!-- 添加 Font Awesome 图标库 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 {% endblock %}

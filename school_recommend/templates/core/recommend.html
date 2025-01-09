@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">智能院校推荐</h2>
+                    <p class="text-muted text-center mb-5">请填写你的基本情况，我们将为你推荐最适合的院校</p>
+                    
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- 专业背景 -->
+                        <div class="mb-4">
+                            <label class="form-label">本科专业</label>
+                            <input type="text" class="form-control" name="undergraduate_major" required>
+                        </div>
+                        
+                        <!-- 目标专业 -->
+                        <div class="mb-4">
+                            <label class="form-label">目标专业方向</label>
+                            <select class="form-select" name="target_major" required>
+                                <option value="">请选择...</option>
+                                {% for major in majors %}
+                                <option value="{{ major }}">{{ major }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- 考试科目成绩 -->
+                        <div class="mb-4">
+                            <label class="form-label">预估分数</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="political_score" 
+                                           placeholder="政治分数" min="0" max="100" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="english_score" 
+                                           placeholder="英语分数" min="0" max="100" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="specialized_score1" 
+                                           placeholder="专业课1分数" min="0" max="150" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="number" class="form-control" name="specialized_score2" 
+                                           placeholder="专业课2分数" min="0" max="150">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 地域偏好 -->
+                        <div class="mb-4">
+                            <label class="form-label">地域偏好</label>
+                            <select class="form-select" name="preferred_region" multiple>
+                                {% for province in provinces %}
+                                <option value="{{ province }}">{{ province }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">按住 Ctrl 键可多选</small>
+                        </div>
+                        
+                        <!-- 院校类型偏好 -->
+                        <div class="mb-4">
+                            <label class="form-label">院校类型偏好</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="school_type" value="985">
+                                <label class="form-check-label">985院校</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="school_type" value="211">
+                                <label class="form-check-label">211院校</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="school_type" value="normal">
+                                <label class="form-check-label">普通院校</label>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-magic me-2"></i>开始推荐
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

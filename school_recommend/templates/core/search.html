@@ -18,9 +18,9 @@
 
     <div class="row">
         <div class="col-12">
-            <h5 class="mb-3">搜索结果: {{ schools|length }} 个</h5>
+            <h5 class="mb-3">搜索结果: {{ page_obj.paginator.count }} 个</h5>
             <div class="row g-3">
-                {% for school in schools %}
+                {% for school in page_obj.object_list %}
                 <div class="col-md-3">
                     <a href="{% url 'school_detail' school.school_id %}" class="text-decoration-none">
                         <div class="card h-100 border-0 bg-light hover-shadow">
@@ -56,6 +56,74 @@
             </div>
         </div>
     </div>
+
+    <!-- 分页导航 -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4" aria-label="搜索结果分页">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted">
+                共 {{ page_obj.paginator.count }} 所学校，{{ page_obj.paginator.num_pages }} 页
+            </small>
+            <small class="text-muted">
+                当前第 {{ page_obj.number }} 页
+            </small>
+        </div>
+        <ul class="pagination justify-content-center">
+            <!-- 首页 -->
+            {% if page_obj.number > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="?q={{ query }}&page=1">首页</a>
+            </li>
+            {% endif %}
+
+            <!-- 上一页 -->
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?q={{ query }}&page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- 页码 -->
+            {% for i in page_obj.paginator.page_range %}
+                {% if i == page_obj.number %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }}</span>
+                    </li>
+                {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ i }}">{{ i }}</a>
+                    </li>
+                {% elif i == 1 or i == page_obj.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&page={{ i }}">{{ i }}</a>
+                    </li>
+                {% elif i == page_obj.number|add:'-3' or i == page_obj.number|add:'3' %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- 下一页 -->
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?q={{ query }}&page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- 末页 -->
+            {% if page_obj.number < page_obj.paginator.num_pages %}
+            <li class="page-item">
+                <a class="page-link" href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}">末页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 
 <style>

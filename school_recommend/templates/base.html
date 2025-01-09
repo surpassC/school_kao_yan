@@ -1,51 +1,139 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>研究生院校推荐系统</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" />
+    <!-- 添加 Font Awesome 图标库 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <style>
+      .pagination {
+        margin-bottom: 0;
+      }
+
+      .pagination .page-link {
+        color: #0d6efd;
+        padding: 0.5rem 0.75rem;
+        margin: 0 2px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+        font-size: 0.875rem;
+        line-height: 1.25;
+        min-width: 32px;
+        text-align: center;
+      }
+
+      .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+      }
+
+      .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+      }
+
+      .pagination .page-link:hover {
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+        color: #0a58ca;
+      }
+
+      .pagination .page-item:first-child .page-link,
+      .pagination .page-item:last-child .page-link {
+        border-radius: 4px;
+      }
+
+      @media (max-width: 576px) {
+        .pagination .page-link {
+          padding: 0.375rem 0.5rem;
+          min-width: 28px;
+          font-size: 0.8125rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .school-logo-wrapper {
+          width: 50px;
+          height: 50px;
+        }
+
+        .school-logo {
+          max-width: 40px;
+          max-height: 40px;
+        }
+      }
+    </style>
     {% block extra_css %}{% endblock %}
-</head>
-<body>
+  </head>
+  <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'index' %}">研究生院校推荐系统</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'index' %}">首页</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'schools' in request.path %}active{% endif %}" href="{% url 'school_list' %}">院校列表</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'analytics' in request.path %}active{% endif %}" href="{% url 'analytics' %}">数据分析</a>
-                    </li>
-                </ul>
-                <form class="d-flex" action="{% url 'search' %}" method="GET">
-                    <input class="form-control me-2" type="search" name="q" placeholder="搜索院校..." aria-label="Search">
-                    <button class="btn btn-outline-light" type="submit">搜索</button>
-                </form>
-            </div>
+      <div class="container">
+        <a class="navbar-brand" href="{% url 'index' %}">研究生院校推荐系统</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.path == '/' %}active{% endif %}"
+                href="{% url 'index' %}"
+                >首页</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if 'schools' in request.path %}active{% endif %}"
+                href="{% url 'school_list' %}"
+                >院校列表</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if 'analytics' in request.path %}active{% endif %}"
+                href="{% url 'analytics' %}"
+                >数据分析</a
+              >
+            </li>
+          </ul>
+          <form class="d-flex" action="{% url 'search' %}" method="GET">
+            <input
+              class="form-control me-2"
+              type="search"
+              name="q"
+              placeholder="搜索院校..."
+              aria-label="Search"
+            />
+            <button class="btn btn-outline-light" type="submit">搜索</button>
+          </form>
         </div>
+      </div>
     </nav>
 
-    <main class="container mt-4">
-        {% block content %}{% endblock %}
-    </main>
+    <main class="container mt-4">{% block content %}{% endblock %}</main>
 
     <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">© 2024 研究生院校推荐系统</span>
-        </div>
+      <div class="container text-center">
+        <span class="text-muted">© 2024 研究生院校推荐系统</span>
+      </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
     {% block extra_js %}{% endblock %}
-</body>
+  </body>
 </html>

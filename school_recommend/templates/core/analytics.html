@@ -132,7 +132,7 @@
     </div>
 
     <!-- 地域分布聚类分析 -->
-    <div class="card mb-4">
+    <div class="card mb-4 d-none">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">地域分布聚类分析</h5>
         </div>
@@ -206,65 +206,86 @@ pre {
 
 {% block extra_js %}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="{% static 'js/plotly-latest.min.js' %}"></script>
+
 <script>
-// 使用Plotly.js创建交互式图表
-document.addEventListener('DOMContentLoaded', function() {
-    // 地域分布聚类地图
-    const regionClusterData = {{ region_clusters|safe }};
-    const clusterColors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'];
-
-    const mapTrace = {
-        type: 'choropleth',
-        locationmode: 'CN-provinces',
-        locations: regionClusterData.map(d => d.province),
-        z: regionClusterData.map(d => d.cluster),
-        text: regionClusterData.map(d => 
-            `${d.province}<br>` +
-            `院校数量: ${d.school_id}<br>` +
-            `985数量: ${d.is_985}<br>` +
-            `211数量: ${d.is_211}<br>` +
-            `平均硕士点: ${d.num_master.toFixed(1)}<br>` +
-            `平均博士点: ${d.num_doctor.toFixed(1)}`
-        ),
-        hoverinfo: 'text',
-        colorscale: clusterColors.map((color, i) => [i/3, color]),
-        showscale: true,
-        colorbar: {
-            title: '聚类组别',
-            ticktext: ['第一组', '第二组', '第三组', '第四组'],
-            tickvals: [0, 1, 2, 3],
-            tickmode: 'array'
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // 加载中国地图数据
+        const response = await fetch("{% static 'geojson-map-china-master/china.json' %}");
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    };
-
-    const mapLayout = {
-        title: '高校地域分布聚类分析',
-        geo: {
-            scope: 'china',
-            showlakes: true,
-            lakecolor: 'rgb(255, 255, 255)',
-            showland: true,
-            landcolor: 'rgb(242, 242, 242)',
-            showframe: false,
-            projection: {
-                type: 'mercator'
+        const chinaMap = await response.json();
+        
+        // 地域分布聚类地图
+        const regionClusterData = {{ region_clusters|safe }};
+        
+        const mapTrace = {
+            type: 'choropleth',
+            locationmode: 'geojson-id',
+            locations: regionClusterData.map(d => d.province),
+            z: regionClusterData.map(d => d.cluster),
+            geojson: chinaMap,
+            text: regionClusterData.map(d => 
+                `${d.province}<br>` +
+                `院校数量: ${d.school_count}所<br>` +
+                `985数量: ${d.num_985}所<br>` +
+                `211数量: ${d.num_211}所<br>` +
+                `平均硕士点: ${d.avg_master}<br>` +
+                `平均博士点: ${d.avg_doctor}`
+            ),
+            hoverinfo: 'text',
+            colorscale: [
+                [0, '#f7fbff'],
+                [0.2, '#deebf7'],
+                [0.4, '#9ecae1'],
+                [0.6, '#3182bd'],
+                [0.8, '#08519c']
+            ],
+            showscale: true,
+            colorbar: {
+                title: '教育资源水平',
+                ticktext: ['较少', '中等', '较多', '丰富', '极丰富'],
+                tickvals: [0, 1, 2, 3, 4],
+                tickmode: 'array'
             }
-        },
-        height: 600,
-        margin: {
-            l: 0,
-            r: 0,
-            t: 30,
-            b: 0
-        }
-    };
+        };
 
-    const config = {
-        responsive: true,
-        displayModeBar: false
-    };
+        const mapLayout = {
+            title: '高校地域分布聚类分析',
+            geo: {
+                scope: 'asia',
+                showframe: false,
+                showcoastlines: true,
+                projection: {
+                    type: 'mercator'
+                },
+                center: {
+                    lon: 105,
+                    lat: 35
+                },
+                lonaxis: {
+                    range: [73, 135]
+                },
+                lataxis: {
+                    range: [18, 54]
+                }
+            },
+            width: 1000,
+            height: 800
+        };
 
-    Plotly.newPlot('regionClusterMap', [mapTrace], mapLayout, config);
+        await Plotly.newPlot('regionClusterMap', [mapTrace], mapLayout, {
+            responsive: true,
+            displayModeBar: false
+        });
+
+    } catch (error) {
+        console.error('Error loading map data:', error);
+        document.getElementById('regionClusterMap').innerHTML = 
+            '<div class="alert alert-danger">加载地图数据时出错</div>';
+    }
 
     // 专业相关性热力图
      // 专业热度趋势图
